@@ -1,0 +1,424 @@
+{
+  "projectType": "fastapi-backend",
+  "architecture": "clean-architecture",
+  "version": "1.0.0",
+  
+  "technologies": {
+    "framework": "FastAPI 0.115+",
+    "orm": "SQLAlchemy 2.0 (async)",
+    "validation": "Pydantic V2",
+    "migration": "Alembic 1.16+",
+    "language": "Python 3.11+",
+    "async": true
+  },
+  
+  "codePatterns": {
+    "apiEndpoint": {
+      "description": "Standard API endpoint pattern",
+      "location": "app/api/v1/",
+      "template": "app/api/v1/{resource_name}.py",
+      "example": "app/api/v1/users.py",
+      "pattern": [
+        "Use Annotated for dependency injection",
+        "Always specify response_model",
+        "Include status codes",
+        "Add comprehensive docstrings",
+        "Handle authentication with Depends(get_current_user)"
+      ]
+    },
+    
+    "service": {
+      "description": "Business logic service",
+      "location": "app/services/",
+      "template": "app/services/{resource_name}_service.py",
+      "example": "app/services/user_service.py",
+      "pattern": [
+        "Accept repository in __init__",
+        "Implement business logic only",
+        "Raise HTTPException for errors",
+        "Use Pydantic schemas for input/output",
+        "Log important operations"
+      ]
+    },
+    
+    "repository": {
+      "description": "Data access layer",
+      "location": "app/repositories/",
+      "template": "app/repositories/{resource_name}.py",
+      "example": "app/repositories/user.py",
+      "pattern": [
+        "Extend BaseRepository",
+        "Accept AsyncSession in __init__",
+        "Database operations ONLY",
+        "Use async/await for all queries",
+        "Return Optional[Model] for single items"
+      ]
+    },
+    
+    "schema": {
+      "description": "Pydantic data validation schemas",
+      "location": "app/schemas/",
+      "template": "app/schemas/{resource_name}.py",
+      "example": "app/schemas/user.py",
+      "pattern": [
+        "Use Pydantic V2 syntax (model_config)",
+        "Create separate Create, Update, Response schemas",
+        "Use Field() for validation and documentation",
+        "Add field_validator for custom validation",
+        "Set from_attributes=True for ORM mode"
+      ]
+    },
+    
+    "model": {
+      "description": "SQLAlchemy database models",
+      "location": "app/models/",
+      "template": "app/models/{resource_name}.py",
+      "example": "app/models/user.py",
+      "pattern": [
+        "Use SQLAlchemy 2.0 syntax (Mapped, mapped_column)",
+        "Extend Base, IDMixin, TimestampMixin",
+        "Define __tablename__ explicitly",
+        "Use __table_args__ for indexes and constraints",
+        "Add docstrings and comments"
+      ]
+    }
+  },
+  
+  "fileTemplates": {
+    "newCrudFeature": {
+      "description": "Complete CRUD feature with all layers",
+      "requiredFiles": [
+        "app/schemas/{name}.py",
+        "app/models/{name}.py",
+        "app/repositories/{name}.py",
+        "app/services/{name}_service.py",
+        "app/api/v1/{name}s.py",
+        "tests/integration/test_api/test_{name}s.py"
+      ],
+      "steps": [
+        "1. Create Pydantic schemas (Base, Create, Update, Response)",
+        "2. Create SQLAlchemy model",
+        "3. Generate Alembic migration",
+        "4. Create repository with common queries",
+        "5. Create service with business logic",
+        "6. Create API routes",
+        "7. Add dependency injection function",
+        "8. Write integration tests",
+        "9. Update main router"
+      ]
+    }
+  },
+  
+  "namingConventions": {
+    "files": {
+      "models": "singular, lowercase (user.py, product.py)",
+      "schemas": "singular, lowercase (user.py, product.py)",
+      "repositories": "singular, lowercase (user.py, product.py)",
+      "services": "singular with _service suffix (user_service.py)",
+      "routes": "plural, lowercase (users.py, products.py)"
+    },
+    "classes": {
+      "models": "PascalCase, singular (User, Product)",
+      "schemas": "PascalCase with suffix (UserCreate, UserUpdate, UserResponse)",
+      "repositories": "PascalCase with Repository suffix (UserRepository)",
+      "services": "PascalCase with Service suffix (UserService)"
+    },
+    "functions": {
+      "async": "Always use async for I/O operations",
+      "naming": "snake_case, verb_noun pattern (get_user, create_product)",
+      "private": "Prefix with underscore (_internal_helper)"
+    },
+    "variables": {
+      "constants": "UPPER_SNAKE_CASE (MAX_FILE_SIZE, API_VERSION)",
+      "regular": "snake_case (user_id, product_name)",
+      "type_hints": "Always include type hints"
+    }
+  },
+  
+  "layerDependencies": {
+    "api": {
+      "canImportFrom": ["services", "schemas", "api.deps", "core"],
+      "cannotImportFrom": ["models", "repositories"],
+      "reason": "API layer should not access database directly"
+    },
+    "services": {
+      "canImportFrom": ["repositories", "schemas", "core"],
+      "cannotImportFrom": ["api"],
+      "reason": "Services should be independent of HTTP layer"
+    },
+    "repositories": {
+      "canImportFrom": ["models", "core"],
+      "cannotImportFrom": ["services", "api", "schemas"],
+      "reason": "Repositories should only know about database"
+    },
+    "models": {
+      "canImportFrom": ["models.base"],
+      "cannotImportFrom": ["services", "api", "schemas", "repositories"],
+      "reason": "Models should be independent of all other layers"
+    }
+  },
+  
+  "requiredPatterns": {
+    "asyncAwait": {
+      "description": "All I/O operations must be async",
+      "applies": ["database", "file operations", "HTTP requests", "external APIs"],
+      "example": "async def get_user(db: AsyncSession, user_id: int) -> Optional[User]"
+    },
+    
+    "typeHints": {
+      "description": "All functions must have type hints",
+      "applies": ["functions", "methods", "variables"],
+      "example": "def process_data(data: dict[str, Any]) -> list[str]"
+    },
+    
+    "dependencyInjection": {
+      "description": "Use FastAPI Depends for all dependencies",
+      "applies": ["database sessions", "services", "authentication"],
+      "example": "service: Annotated[UserService, Depends(get_user_service)]"
+    },
+    
+    "errorHandling": {
+      "description": "Proper HTTP exceptions with status codes",
+      "applies": ["all API endpoints", "services"],
+      "example": "raise HTTPException(status_code=404, detail='User not found')"
+    },
+    
+    "validation": {
+      "description": "Use Pydantic for all input validation",
+      "applies": ["API inputs", "configuration"],
+      "example": "class UserCreate(BaseModel): email: EmailStr"
+    }
+  },
+  
+  "commonTasks": {
+    "addNewEndpoint": {
+      "steps": [
+        "1. Define Pydantic schema in app/schemas/",
+        "2. If new table needed: Create model in app/models/",
+        "3. If new table needed: Run 'alembic revision --autogenerate -m \"Add table\"'",
+        "4. Create/update repository in app/repositories/",
+        "5. Create/update service in app/services/",
+        "6. Create endpoint in app/api/v1/",
+        "7. Add dependency function in app/api/deps.py",
+        "8. Write tests in tests/",
+        "9. Test manually with /docs"
+      ]
+    },
+    
+    "addDatabaseField": {
+      "steps": [
+        "1. Add field to model in app/models/",
+        "2. Run 'alembic revision --autogenerate -m \"Add field\"'",
+        "3. Review migration file",
+        "4. Run 'alembic upgrade head'",
+        "5. Update Pydantic schemas if needed",
+        "6. Update tests"
+      ]
+    },
+    
+    "addAuthentication": {
+      "steps": [
+        "1. Use Depends(get_current_user) in endpoint",
+        "2. Access user via current_user parameter",
+        "3. Check permissions in service layer",
+        "4. Return 401/403 for auth failures"
+      ]
+    }
+  },
+  
+  "testingGuidelines": {
+    "structure": {
+      "unit": "tests/unit/ - Test individual functions",
+      "integration": "tests/integration/ - Test API endpoints",
+      "e2e": "tests/e2e/ - Test complete workflows"
+    },
+    "fixtures": {
+      "location": "tests/conftest.py",
+      "common": ["db_session", "client", "auth_headers", "test_user"]
+    },
+    "naming": "test_{what_is_tested}_{scenario}",
+    "coverage": "Aim for 80%+ code coverage",
+    "commands": {
+      "all": "pytest",
+      "coverage": "pytest --cov=app --cov-report=html",
+      "specific": "pytest tests/path/to/test.py::test_function",
+      "markers": "pytest -m unit OR pytest -m integration"
+    }
+  },
+  
+  "securityChecklist": [
+    "Never commit .env files",
+    "Always hash passwords with passlib[bcrypt]",
+    "Use JWT tokens with expiration",
+    "Validate ALL user input with Pydantic",
+    "Use Depends(get_current_user) for authentication",
+    "Implement rate limiting",
+    "Use HTTPS in production",
+    "Set proper CORS policies",
+    "Sanitize error messages in production",
+    "Use parameterized queries (SQLAlchemy handles this)",
+    "Keep dependencies updated",
+    "Use environment variables for secrets"
+  ],
+  
+  "performanceOptimization": [
+    "Use async/await for all I/O operations",
+    "Implement database connection pooling",
+    "Use selectinload() for eager loading relationships",
+    "Add indexes on frequently queried columns",
+    "Implement pagination for list endpoints",
+    "Use Redis for caching",
+    "Optimize N+1 query problems",
+    "Use background tasks for long operations",
+    "Implement query result caching"
+  ],
+  
+  "migrationWorkflow": {
+    "create": "alembic revision --autogenerate -m \"Description\"",
+    "review": "Review generated migration file in alembic/versions/",
+    "apply": "alembic upgrade head",
+    "rollback": "alembic downgrade -1",
+    "current": "alembic current",
+    "history": "alembic history"
+  },
+  
+  "documentation": {
+    "code": {
+      "docstrings": "Required for all public functions/classes",
+      "comments": "For complex logic only",
+      "typeHints": "Always include"
+    },
+    "api": {
+      "automatic": "FastAPI generates OpenAPI docs at /docs",
+      "enhance": "Add examples to Pydantic schemas",
+      "descriptions": "Add comprehensive docstrings to endpoints"
+    }
+  },
+  
+  "codeQuality": {
+    "formatters": {
+      "black": "Line length: 88",
+      "isort": "Import sorting"
+    },
+    "linters": {
+      "pylint": "Code quality",
+      "mypy": "Type checking"
+    },
+    "testing": {
+      "pytest": "Test framework",
+      "coverage": "80%+ target"
+    }
+  },
+  
+  "developmentWorkflow": {
+    "setup": [
+      "1. Create virtual environment: python -m venv venv",
+      "2. Activate: source venv/bin/activate",
+      "3. Install dependencies: pip install -r requirements.txt",
+      "4. Copy .env.example to .env",
+      "5. Configure .env file",
+      "6. Run migrations: alembic upgrade head",
+      "7. Start server: uvicorn app.main:app --reload"
+    ],
+    "newFeature": [
+      "1. Create feature branch",
+      "2. Implement feature (follow layer pattern)",
+      "3. Write tests",
+      "4. Run tests: pytest",
+      "5. Format code: black .",
+      "6. Sort imports: isort .",
+      "7. Type check: mypy app",
+      "8. Commit with conventional commit message",
+      "9. Push and create PR"
+    ]
+  },
+  
+  "environmentVariables": {
+    "required": [
+      "DATABASE_URL",
+      "SECRET_KEY",
+      "DB_USER",
+      "DB_PASSWORD",
+      "DB_NAME"
+    ],
+    "optional": [
+      "REDIS_HOST",
+      "SMTP_HOST",
+      "LOG_LEVEL",
+      "CORS_ORIGINS"
+    ],
+    "usage": "from app.core.config import settings; db_url = settings.DATABASE_URL"
+  },
+  
+  "helpfulCommands": {
+    "database": {
+      "createMigration": "alembic revision --autogenerate -m 'description'",
+      "applyMigrations": "alembic upgrade head",
+      "rollback": "alembic downgrade -1",
+      "currentVersion": "alembic current",
+      "history": "alembic history"
+    },
+    "testing": {
+      "runAll": "pytest",
+      "withCoverage": "pytest --cov=app --cov-report=html",
+      "specific": "pytest tests/path/to/test.py",
+      "markers": "pytest -m unit"
+    },
+    "development": {
+      "runServer": "uvicorn app.main:app --reload",
+      "formatCode": "black .",
+      "sortImports": "isort .",
+      "typeCheck": "mypy app",
+      "lint": "pylint app"
+    },
+    "docker": {
+      "build": "docker-compose build",
+      "up": "docker-compose up",
+      "down": "docker-compose down",
+      "logs": "docker-compose logs -f"
+    }
+  },
+  
+  "aiAssistantHints": {
+    "whenSuggestingCode": [
+      "Always check existing patterns first",
+      "Provide complete implementations, not fragments",
+      "Include proper error handling",
+      "Add type hints to all functions",
+      "Include docstrings",
+      "Suggest tests when appropriate",
+      "Follow the layer architecture strictly",
+      "Use async/await for I/O operations",
+      "Use latest syntax for all libraries"
+    ],
+    "whenRefactoring": [
+      "Keep tests passing",
+      "Don't mix refactoring with new features",
+      "Maintain existing patterns",
+      "Test thoroughly after changes"
+    ],
+    "whenDebugging": [
+      "Check logs first",
+      "Verify database connection",
+      "Check environment variables",
+      "Review recent migrations",
+      "Check for async/sync mixing"
+    ]
+  },
+  
+  "references": {
+    "documentation": {
+      "fastapi": "https://fastapi.tiangolo.com/",
+      "sqlalchemy": "https://docs.sqlalchemy.org/en/20/",
+      "pydantic": "https://docs.pydantic.dev/",
+      "alembic": "https://alembic.sqlalchemy.org/"
+    },
+    "projectFiles": {
+      "architecture": "specification/architieve/BACKEND_ARCHITECTURE_SPECIFICATION.md",
+      "cursorRules": "specification/architieve/.cursorrules",
+      "copilotInstructions": "specification/architieve/.github/copilot-instructions.md",
+      "templates": "specification/architieve/CODE_TEMPLATES.md",
+      "llmGuide": "specification/architieve/LLM_CODING_GUIDE.md"
+    }
+  }
+}

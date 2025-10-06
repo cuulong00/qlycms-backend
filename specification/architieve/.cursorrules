@@ -1,0 +1,248 @@
+# Cursor AI Rules - FastAPI Backend Project
+# This file helps Cursor AI understand the project structure and coding standards
+
+## Project Context
+You are working on a production-ready FastAPI backend with:
+- FastAPI 0.115+
+- SQLAlchemy 2.0 (async)
+- Pydantic V2
+- Alembic migrations
+- Clean Architecture pattern
+
+## Architecture Layers
+1. **Presentation Layer** (app/api/) - FastAPI routes, dependencies, error handlers
+2. **Application Layer** (app/services/, app/schemas/) - Business logic, DTOs
+3. **Domain Layer** (app/domain/) - Entities, repository interfaces
+4. **Infrastructure Layer** (app/repositories/, app/models/) - Database implementations
+
+## Coding Standards
+
+### Python Style
+- Use Python 3.11+ features
+- Follow PEP 8 with Black formatter (line length: 88)
+- Use type hints everywhere (no `Any` unless absolutely necessary)
+- Use async/await for all I/O operations
+- Prefer composition over inheritance
+
+### FastAPI Patterns
+```python
+# Always use dependency injection
+from typing import Annotated
+from fastapi import Depends
+
+async def get_service(db: Annotated[AsyncSession, Depends(get_db)]) -> UserService:
+    return UserService(UserRepository(db))
+
+# Use Annotated for dependencies
+@router.get("/users/{user_id}")
+async def get_user(
+    user_id: int,
+    service: Annotated[UserService, Depends(get_service)]
+) -> UserResponse:
+    return await service.get_by_id(user_id)
+```
+
+### Pydantic V2 Patterns
+```python
+from pydantic import BaseModel, ConfigDict, Field
+
+class UserCreate(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True,
+        str_strip_whitespace=True,
+        validate_assignment=True
+    )
+    
+    email: str = Field(..., description="User email", max_length=255)
+    username: str = Field(..., min_length=3, max_length=50)
+```
+
+### SQLAlchemy 2.0 Patterns
+```python
+# Use async/await
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+async def get_user(db: AsyncSession, user_id: int):
+    result = await db.execute(
+        select(User).where(User.id == user_id)
+    )
+    return result.scalar_one_or_none()
+
+# Use mapped_column and Mapped
+from sqlalchemy.orm import Mapped, mapped_column
+
+class User(Base):
+    __tablename__ = "users"
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True)
+```
+
+### Repository Pattern
+```python
+# Always implement repository interface first
+class IUserRepository(Protocol):
+    async def get_by_id(self, id: int) -> Optional[User]: ...
+    async def create(self, obj_in: dict) -> User: ...
+
+# Then implement
+class UserRepository(BaseRepository[User]):
+    def __init__(self, db: AsyncSession):
+        super().__init__(User, db)
+```
+
+### Service Pattern
+```python
+class UserService:
+    def __init__(self, repository: UserRepository):
+        self.repository = repository
+    
+    async def register_user(self, user_data: UserCreate) -> UserResponse:
+        # Business logic here
+        # Validate, transform, etc.
+        user = await self.repository.create(user_data.model_dump())
+        return UserResponse.model_validate(user)
+```
+
+## File Naming Conventions
+- Models: `app/models/user.py` (singular, lowercase)
+- Schemas: `app/schemas/user.py` (singular, lowercase)
+- Repositories: `app/repositories/user.py` (singular)
+- Services: `app/services/user_service.py` (with _service suffix)
+- Routes: `app/api/v1/users.py` (plural for collection routes)
+
+## Import Organization
+```python
+# Standard library
+import os
+from datetime import datetime
+from typing import Optional, List
+
+# Third-party
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from pydantic import BaseModel
+
+# Local application
+from app.core.config import settings
+from app.models.user import User
+from app.schemas.user import UserCreate, UserResponse
+from app.repositories.user import UserRepository
+```
+
+## Error Handling
+```python
+# Use custom exceptions
+from app.core.exceptions import NotFoundError, ValidationError
+
+# In services
+if not user:
+    raise NotFoundError(f"User with id {user_id} not found")
+
+# In API routes
+@router.get("/users/{user_id}")
+async def get_user(user_id: int) -> UserResponse:
+    try:
+        return await service.get_by_id(user_id)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+```
+
+## Testing Patterns
+```python
+# Use pytest-asyncio
+import pytest
+from httpx import AsyncClient
+
+@pytest.mark.asyncio
+async def test_create_user(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/users/",
+        json={"email": "test@example.com", "username": "testuser"}
+    )
+    assert response.status_code == 201
+    assert response.json()["email"] == "test@example.com"
+```
+
+## Common Tasks
+
+### Creating a New Endpoint
+1. Define Pydantic schemas in `app/schemas/`
+2. Define SQLAlchemy model in `app/models/` (if needed)
+3. Create migration: `alembic revision --autogenerate -m "Add table"`
+4. Implement repository in `app/repositories/`
+5. Implement service in `app/services/`
+6. Create API route in `app/api/v1/`
+7. Write tests in `tests/`
+
+### Creating a New Model
+```python
+# app/models/item.py
+from sqlalchemy.orm import Mapped, mapped_column
+from app.models.base import Base, TimestampMixin, IDMixin
+
+class Item(Base, IDMixin, TimestampMixin):
+    __tablename__ = "items"
+    
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+```
+
+### Creating Migration
+```bash
+# Auto-generate migration
+alembic revision --autogenerate -m "Add items table"
+
+# Review and edit migration file in alembic/versions/
+
+# Apply migration
+alembic upgrade head
+```
+
+## Security Best Practices
+- Never commit `.env` files
+- Always use `Depends()` for authentication
+- Hash passwords with `passlib[bcrypt]`
+- Use JWT tokens with expiration
+- Validate all input with Pydantic
+- Use parameterized queries (SQLAlchemy handles this)
+
+## Performance Tips
+- Use `async`/`await` for all database operations
+- Use `selectinload()` for eager loading relationships
+- Implement pagination for list endpoints
+- Use Redis for caching frequently accessed data
+- Use database indexes on frequently queried columns
+
+## Documentation
+- Every public function/class should have docstrings
+- Use FastAPI's built-in OpenAPI documentation
+- Add examples to Pydantic schemas using `json_schema_extra`
+
+## When Creating New Features
+Ask yourself:
+1. Does this follow Clean Architecture?
+2. Are all dependencies injected?
+3. Is business logic in the service layer?
+4. Are there appropriate type hints?
+5. Can this be tested easily?
+6. Is there proper error handling?
+7. Is the code async where appropriate?
+
+## Avoid These Anti-Patterns
+❌ Don't put business logic in route handlers
+❌ Don't use synchronous database operations
+❌ Don't skip type hints
+❌ Don't hardcode configuration values
+❌ Don't ignore error cases
+❌ Don't write untestable code
+❌ Don't skip migrations for schema changes
+
+## Remember
+- Code should be self-documenting
+- Prefer explicit over implicit
+- Write tests before or during development
+- Keep functions small and focused
+- Follow SOLID principles
+- Security first, always

@@ -1,0 +1,54 @@
+# Core Framework
+fastapi[standard]==0.118.0
+pydantic==2.11.10
+pydantic-settings==2.7.0
+sqlalchemy[asyncio]==2.0.43
+alembic==1.16.5
+uvicorn[standard]==0.37.0
+
+# Database Drivers
+asyncpg==0.30.0  # PostgreSQL async driver
+aiosqlite==0.20.0  # SQLite async driver
+
+# Security & Authentication
+fastapi-users[sqlalchemy]==14.0.1  # Complete user management system
+authlib==1.6.5  # OAuth 2.0 / OpenID Connect
+python-jose[cryptography]==3.3.0  # JWT token handling
+passlib[bcrypt]==1.7.4  # Password hashing
+python-casbin==1.37.6  # Authorization with RBAC/ABAC/ACL
+casbin-sqlalchemy-adapter==1.5.0  # Casbin adapter for SQLAlchemy
+
+# Data Validation & Serialization
+python-multipart==0.0.17  # File upload support
+email-validator==2.2.0  # Email validation
+
+# HTTP & Networking
+httpx==0.28.0  # Async HTTP client
+
+# Caching & Background Tasks
+redis==5.2.0  # Caching
+celery==5.4.0  # Background tasks
+flower==2.0.1  # Celery monitoring
+
+# Utilities
+python-dotenv==1.0.1  # Environment variables
+tenacity==9.0.0  # Retry logic
+pendulum==3.0.0  # Better datetime handling
+loguru==0.7.2  # Advanced logging
+
+# Testing
+pytest==8.3.0
+pytest-asyncio==0.24.0
+pytest-cov==5.0.0
+pytest-mock==3.14.0
+httpx==0.28.0  # For testing async clients
+faker==30.8.2  # Fake data generation
+
+# Development
+ruff==0.7.4  # Fast linter & formatter
+mypy==1.13.0  # Static type checking
+pre-commit==4.0.1  # Git hooks
+
+# Documentation
+mkdocs==1.6.1  # Documentation generator
+mkdocs-material==9.5.42  # Material theme
