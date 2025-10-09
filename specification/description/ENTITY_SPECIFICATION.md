@@ -1,438 +1,850 @@
-# Đặc Tả Thực Thể (Entity Specification)
-
-## Tổng Quan
-Tài liệu này mô tả chi tiết các thực thể (entities) trong hệ thống quản lý yêu cầu mua sắm (Procurement Management System) của Aladdin.
-
----
-
-## 1. User (Người Dùng)
-
-### 1.1. Mô Tả
-Đại diện cho người dùng trong hệ thống, bao gồm nhân viên Aladdin và đối tác nhà cung cấp.
-
-### 1.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | UUID/Integer | Yes | Khóa chính, định danh duy nhất |
-| username | String(100) | Yes | Tên đăng nhập, unique |
-| email | String(255) | Yes | Email người dùng, unique |
-| full_name | String(255) | Yes | Họ và tên đầy đủ |
-| password_hash | String(255) | Yes | Mật khẩu đã mã hóa |
-| user_type | Enum | Yes | Loại user: ALADDIN, SUPPLIER |
-| supplier_id | Integer | No | ID nhà cung cấp (null nếu là user Aladdin) |
-| is_active | Boolean | Yes | Trạng thái kích hoạt |
-| phone_number | String(20) | No | Số điện thoại |
-| created_at | DateTime | Yes | Thời gian tạo |
-| updated_at | DateTime | Yes | Thời gian cập nhật |
-| last_login | DateTime | No | Lần đăng nhập cuối |
-
-### 1.3. Ràng Buộc
-- `username` và `email` phải unique
-- `user_type` = SUPPLIER thì `supplier_id` phải có giá trị
-- `user_type` = ALADDIN thì `supplier_id` phải null
-
-### 1.4. Quan Hệ
-- Belongs to: `Supplier` (nếu user_type = SUPPLIER)
-- Has many: `ProcurementRequest` (người tạo)
-- Has many: `DeliveryNote` (người tạo/cập nhật)
-
----
-
-## 2. Supplier (Nhà Cung Cấp)
-
-### 2.1. Mô Tả
-Đại diện cho các đối tác nhà cung cấp của Aladdin.
-
-### 2.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | Integer | Yes | Khóa chính |
-| code | String(50) | Yes | Mã nhà cung cấp, unique |
-| name | String(255) | Yes | Tên nhà cung cấp |
-| tax_code | String(50) | No | Mã số thuế |
-| address | Text | No | Địa chỉ |
-| phone | String(20) | No | Số điện thoại |
-| email | String(255) | No | Email liên hệ |
-| contact_person | String(255) | No | Người liên hệ |
-| is_active | Boolean | Yes | Trạng thái hoạt động |
-| created_at | DateTime | Yes | Thời gian tạo |
-| updated_at | DateTime | Yes | Thời gian cập nhật |
-
-### 2.3. Ràng Buộc
-- `code` phải unique
-- `email` phải unique nếu có giá trị
-
-### 2.4. Quan Hệ
-- Has many: `User` (nhân viên nhà cung cấp)
-- Has many: `ProcurementRequestItem` (các yêu cầu)
-- Has many: `SupplierProduct` (sản phẩm)
-
----
-
-## 3. Restaurant (Nhà Hàng)
-
-### 3.1. Mô Tả
-Đại diện cho các nhà hàng trong hệ thống Aladdin (100 nhà hàng toàn quốc).
-
-### 3.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | Integer | Yes | Khóa chính |
-| code | String(50) | Yes | Mã nhà hàng, unique |
-| name | String(255) | Yes | Tên nhà hàng |
-| address | Text | Yes | Địa chỉ giao hàng |
-| province | String(100) | No | Tỉnh/thành phố |
-| district | String(100) | No | Quận/huyện |
-| phone | String(20) | No | Số điện thoại |
-| manager_name | String(255) | No | Tên quản lý |
-| is_active | Boolean | Yes | Trạng thái hoạt động |
-| created_at | DateTime | Yes | Thời gian tạo |
-| updated_at | DateTime | Yes | Thời gian cập nhật |
-
-### 3.3. Ràng Buộc
-- `code` phải unique
-
-### 3.4. Quan Hệ
-- Has many: `ProcurementRequestItem` (các yêu cầu mua hàng)
-- Has many: `DeliveryNote` (các phiếu giao hàng)
-
----
-
-## 4. Product (Sản Phẩm)
-
-### 4.1. Mô Tả
-Danh mục sản phẩm chuẩn hóa trong hệ thống Aladdin.
-
-### 4.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | Integer | Yes | Khóa chính |
-| code | String(50) | Yes | Mã sản phẩm chuẩn, unique |
-| name | String(255) | Yes | Tên sản phẩm chuẩn |
-| category_id | Integer | No | ID danh mục sản phẩm |
-| base_unit | String(50) | Yes | Đơn vị tính cơ bản (kg, lit, cái...) |
-| description | Text | No | Mô tả sản phẩm |
-| is_active | Boolean | Yes | Trạng thái hoạt động |
-| created_at | DateTime | Yes | Thời gian tạo |
-| updated_at | DateTime | Yes | Thời gian cập nhật |
-
-### 4.3. Ràng Buộc
-- `code` phải unique
-
-### 4.4. Quan Hệ
-- Belongs to: `ProductCategory`
-- Has many: `SupplierProduct` (mapping với sản phẩm nhà cung cấp)
-- Has many: `ProcurementRequestItem`
-
----
-
-## 5. ProductCategory (Nhóm Sản Phẩm)
-
-### 5.1. Mô Tả
-Phân loại sản phẩm theo nhóm (nhóm nguyên liệu, thực phẩm...).
-
-### 5.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | Integer | Yes | Khóa chính |
-| code | String(50) | Yes | Mã nhóm, unique |
-| name | String(255) | Yes | Tên nhóm |
-| parent_id | Integer | No | ID nhóm cha (phân cấp) |
-| description | Text | No | Mô tả |
-| is_active | Boolean | Yes | Trạng thái |
-| created_at | DateTime | Yes | Thời gian tạo |
-| updated_at | DateTime | Yes | Thời gian cập nhật |
-
-### 5.3. Quan Hệ
-- Has many: `Product`
-- Self-referencing: `parent_id` -> `id` (phân cấp nhóm)
-
----
-
-## 6. SupplierProduct (Sản Phẩm Nhà Cung Cấp)
-
-### 6.1. Mô Tả
-Mapping giữa sản phẩm chuẩn và sản phẩm của từng nhà cung cấp (để giải quyết vấn đề quy cách đóng gói, tên gọi khác nhau).
-
-### 6.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | Integer | Yes | Khóa chính |
-| supplier_id | Integer | Yes | ID nhà cung cấp |
-| product_id | Integer | Yes | ID sản phẩm chuẩn |
-| supplier_product_code | String(100) | Yes | Mã sản phẩm của nhà cung cấp |
-| supplier_product_name | String(255) | Yes | Tên sản phẩm của nhà cung cấp |
-| supplier_unit | String(50) | Yes | Đơn vị tính của nhà cung cấp |
-| conversion_factor | Decimal(10,4) | Yes | Hệ số quy đổi sang đơn vị chuẩn |
-| unit_price | Decimal(15,2) | No | Đơn giá |
-| is_active | Boolean | Yes | Trạng thái |
-| created_at | DateTime | Yes | Thời gian tạo |
-| updated_at | DateTime | Yes | Thời gian cập nhật |
-
-### 6.3. Ràng Buộc
-- Unique constraint: (`supplier_id`, `supplier_product_code`)
-- `conversion_factor` > 0
-
-### 6.4. Quan Hệ
-- Belongs to: `Supplier`
-- Belongs to: `Product`
-
-### 6.5. Ví Dụ
-```
-Sản phẩm chuẩn: Gạo ST25 (đơn vị: kg)
-Nhà cung cấp A: Gạo ST25 bao 50kg (conversion_factor = 50)
-Nhà cung cấp B: Gạo ST25 thùng 25kg (conversion_factor = 25)
-```
-
----
-
-## 7. ProcurementRequest (Phiếu Yêu Cầu Mua Sắm - YCMS)
-
-### 7.1. Mô Tả
-Phiếu yêu cầu mua sắm tổng hợp cho nhiều nhà hàng và nhiều nhà cung cấp.
-
-### 7.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | Integer | Yes | Khóa chính |
-| code | String(50) | Yes | Mã phiếu YCMS, unique |
-| title | String(255) | Yes | Tiêu đề phiếu |
-| request_date | Date | Yes | Ngày đề nghị |
-| status | Enum | Yes | Trạng thái: DRAFT, SUBMITTED, CONFIRMED, PROCESSING, COMPLETED, CANCELLED |
-| created_by | Integer | Yes | User tạo phiếu (Aladdin) |
-| submitted_at | DateTime | No | Thời gian submit |
-| notes | Text | No | Ghi chú |
-| created_at | DateTime | Yes | Thời gian tạo |
-| updated_at | DateTime | Yes | Thời gian cập nhật |
-
-### 7.3. Ràng Buộc
-- `code` phải unique
-- `created_by` phải là user Aladdin
-- Status transition rules apply (DRAFT -> SUBMITTED -> CONFIRMED...)
-
-### 7.4. Quan Hệ
-- Belongs to: `User` (created_by)
-- Has many: `ProcurementRequestItem`
-
-### 7.5. Vòng Đời Trạng Thái
-```
-DRAFT (Nháp) 
-  -> SUBMITTED (Đã gửi) 
-  -> CONFIRMED (Đã xác nhận - nhà cung cấp xác nhận)
-  -> PROCESSING (Đang xử lý - tạo phiếu giao hàng)
-  -> COMPLETED (Hoàn thành)
-  -> CANCELLED (Hủy - có thể hủy từ bất kỳ trạng thái nào)
-```
-
----
-
-## 8. ProcurementRequestItem (Chi Tiết Phiếu YCMS)
-
-### 8.1. Mô Tả
-Chi tiết từng dòng sản phẩm trong phiếu yêu cầu mua sắm.
-
-### 8.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | Integer | Yes | Khóa chính |
-| procurement_request_id | Integer | Yes | ID phiếu YCMS |
-| product_id | Integer | Yes | ID sản phẩm chuẩn |
-| supplier_id | Integer | Yes | ID nhà cung cấp |
-| restaurant_id | Integer | Yes | ID nhà hàng nhận |
-| quantity_requested | Decimal(15,3) | Yes | Số lượng yêu cầu |
-| unit | String(50) | Yes | Đơn vị tính |
-| unit_price | Decimal(15,2) | No | Đơn giá |
-| total_amount | Decimal(15,2) | No | Thành tiền (tính toán) |
-| delivery_address | Text | Yes | Địa điểm giao hàng |
-| expected_delivery_date | Date | Yes | Ngày muốn nhận |
-| notes | Text | No | Ghi chú |
-| status | Enum | Yes | Trạng thái: PENDING, CONFIRMED, DELIVERED, CANCELLED |
-| created_at | DateTime | Yes | Thời gian tạo |
-| updated_at | DateTime | Yes | Thời gian cập nhật |
-
-### 8.3. Ràng Buộc
-- `quantity_requested` > 0
-- `total_amount` = `quantity_requested` * `unit_price`
-- `expected_delivery_date` >= `procurement_request.request_date`
-
-### 8.4. Quan Hệ
-- Belongs to: `ProcurementRequest`
-- Belongs to: `Product`
-- Belongs to: `Supplier`
-- Belongs to: `Restaurant`
-- Has many: `DeliveryNoteItem` (được tách thành nhiều phiếu giao hàng)
-
----
-
-## 9. DeliveryNote (Phiếu Giao Hàng)
-
-### 9.1. Mô Tả
-Phiếu giao hàng được tách ra từ phiếu YCMS, theo từng ngày và từng nhà hàng.
-
-### 9.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | Integer | Yes | Khóa chính |
-| code | String(50) | Yes | Mã phiếu giao hàng, unique |
-| procurement_request_id | Integer | Yes | ID phiếu YCMS gốc |
-| supplier_id | Integer | Yes | ID nhà cung cấp |
-| restaurant_id | Integer | Yes | ID nhà hàng nhận |
-| delivery_date | Date | Yes | Ngày giao hàng |
-| delivery_address | Text | Yes | Địa điểm giao hàng |
-| status | Enum | Yes | Trạng thái: DRAFT, CONFIRMED, IN_TRANSIT, DELIVERED, CANCELLED |
-| total_amount | Decimal(15,2) | No | Tổng tiền (tính toán) |
-| created_by | Integer | Yes | User tạo (supplier) |
-| confirmed_by | Integer | No | User xác nhận (Aladdin) |
-| confirmed_at | DateTime | No | Thời gian xác nhận |
-| delivered_at | DateTime | No | Thời gian giao hàng |
-| notes | Text | No | Ghi chú |
-| created_at | DateTime | Yes | Thời gian tạo |
-| updated_at | DateTime | Yes | Thời gian cập nhật |
-
-### 9.3. Ràng Buộc
-- `code` phải unique
-- `created_by` phải là user của `supplier_id` tương ứng
-- `delivery_date` phải nằm trong khoảng thời gian hợp lý
-
-### 9.4. Quan Hệ
-- Belongs to: `ProcurementRequest`
-- Belongs to: `Supplier`
-- Belongs to: `Restaurant`
-- Belongs to: `User` (created_by, confirmed_by)
-- Has many: `DeliveryNoteItem`
-
-### 9.5. Vòng Đời Trạng Thái
-```
-DRAFT (Nháp) 
-  -> CONFIRMED (Đã xác nhận)
-  -> IN_TRANSIT (Đang vận chuyển)
-  -> DELIVERED (Đã giao)
-  -> CANCELLED (Hủy)
-```
-
----
-
-## 10. DeliveryNoteItem (Chi Tiết Phiếu Giao Hàng)
-
-### 10.1. Mô Tả
-Chi tiết từng dòng sản phẩm trong phiếu giao hàng.
-
-### 10.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | Integer | Yes | Khóa chính |
-| delivery_note_id | Integer | Yes | ID phiếu giao hàng |
-| procurement_request_item_id | Integer | Yes | ID chi tiết YCMS gốc |
-| product_id | Integer | Yes | ID sản phẩm |
-| product_code | String(50) | Yes | Mã sản phẩm |
-| product_name | String(255) | Yes | Tên sản phẩm |
-| quantity_ordered | Decimal(15,3) | Yes | Số lượng yêu cầu |
-| quantity_delivered | Decimal(15,3) | No | Số lượng thực nhận |
-| unit | String(50) | Yes | Đơn vị tính |
-| unit_price | Decimal(15,2) | Yes | Đơn giá |
-| total_amount | Decimal(15,2) | No | Tổng tiền (tính toán) |
-| notes | Text | No | Ghi chú |
-| created_at | DateTime | Yes | Thời gian tạo |
-| updated_at | DateTime | Yes | Thời gian cập nhật |
-
-### 10.3. Ràng Buộc
-- `quantity_ordered` > 0
-- `quantity_delivered` >= 0
-- `total_amount` = `quantity_delivered` * `unit_price` (nếu đã giao)
-- Sum of `quantity_ordered` for same `procurement_request_item_id` <= original `quantity_requested`
-
-### 10.4. Quan Hệ
-- Belongs to: `DeliveryNote`
-- Belongs to: `ProcurementRequestItem`
-- Belongs to: `Product`
-
----
-
-## 11. AuditLog (Nhật Ký Hệ Thống)
-
-### 11.1. Mô Tả
-Ghi lại các thay đổi quan trọng trong hệ thống.
-
-### 11.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | Integer | Yes | Khóa chính |
-| user_id | Integer | Yes | User thực hiện |
-| entity_type | String(100) | Yes | Loại thực thể (ProcurementRequest, DeliveryNote...) |
-| entity_id | Integer | Yes | ID thực thể |
-| action | Enum | Yes | Hành động: CREATE, UPDATE, DELETE, STATUS_CHANGE |
-| old_value | JSON | No | Giá trị cũ |
-| new_value | JSON | No | Giá trị mới |
-| ip_address | String(50) | No | Địa chỉ IP |
-| created_at | DateTime | Yes | Thời gian |
-
----
-
-## 12. Notification (Thông Báo)
-
-### 12.1. Mô Tả
-Thông báo gửi cho người dùng (email, in-app).
-
-### 12.2. Thuộc Tính
-
-| Tên Trường | Kiểu Dữ Liệu | Bắt Buộc | Mô Tả |
-|------------|--------------|----------|-------|
-| id | Integer | Yes | Khóa chính |
-| user_id | Integer | No | User nhận (null = all users của supplier) |
-| supplier_id | Integer | No | Nhà cung cấp nhận |
-| type | Enum | Yes | Loại: NEW_REQUEST, REQUEST_UPDATED, DELIVERY_CONFIRMED |
-| title | String(255) | Yes | Tiêu đề |
-| message | Text | Yes | Nội dung |
-| reference_type | String(100) | No | Loại tham chiếu |
-| reference_id | Integer | No | ID tham chiếu |
-| is_read | Boolean | Yes | Đã đọc |
-| sent_at | DateTime | Yes | Thời gian gửi |
-| read_at | DateTime | No | Thời gian đọc |
-
----
-
-## Sơ Đồ Quan Hệ Tổng Quan
-
-```
-User ──────┬──> Supplier
-           │
-           └──> ProcurementRequest ──> ProcurementRequestItem ──┬──> Product ──> ProductCategory
-                                                                  │
-                                                                  ├──> Supplier ──> SupplierProduct
-                                                                  │
-                                                                  ├──> Restaurant
-                                                                  │
-                                                                  └──> DeliveryNoteItem <── DeliveryNote
-                                                                            │
-                                                                            └──> Supplier
-                                                                            └──> Restaurant
-```
-
----
-
-## Lưu Ý Kỹ Thuật
-
-1. **Soft Delete**: Tất cả entities nên hỗ trợ soft delete (thêm trường `deleted_at`)
-2. **Indexing**: 
-   - Index trên các trường `code`, `email`, foreign keys
-   - Composite index trên (`supplier_id`, `created_at`) cho truy vấn theo supplier
-3. **Validation**: Implement validation ở cả API level và Database level
-4. **Audit Trail**: Sử dụng database triggers hoặc application-level hooks để ghi audit log
-5. **Concurrency**: Sử dụng optimistic locking (version field) cho các entities quan trọng
+# ĐẶC TẢ THỰC THỂ VÀ DATABASE SCHEMA
+## Entity Specification for YCMS - Procurement Management System
 
 ---
 
 **Version**: 1.0  
-**Last Updated**: 2025-10-06  
-**Author**: System Architect
+**Last Updated**: 2025-10-08  
+**Status**: ✅ Ready for Implementation  
+**Author**: Database Architect  
+
+---
+
+## 📐 SƠ ĐỒ QUAN HỆ TỔNG THỂ (ER DIAGRAM)
+
+```mermaid
+erDiagram
+    User ||--o{ ProcurementRequest : creates
+    User ||--o{ DeliveryNote : manages
+    User }o--|| Supplier : belongs_to
+    
+    Supplier ||--o{ SupplierProduct : has
+    Supplier ||--o{ ProcurementRequest : receives
+    Supplier ||--o{ DeliveryNote : creates
+    
+    Product ||--o{ SupplierProduct : mapped_to
+    Product ||--o{ ProcurementRequestItem : contains
+    Product ||--o{ DeliveryNoteItem : contains
+    ProductCategory ||--o{ Product : categorizes
+    
+    Restaurant ||--o{ ProcurementRequest : receives_at
+    Restaurant ||--o{ DeliveryNote : delivers_to
+    
+    ProcurementRequest ||--o{ ProcurementRequestItem : contains
+    ProcurementRequest ||--o{ DeliveryNote : splits_into
+    
+    DeliveryNote ||--o{ DeliveryNoteItem : contains
+    DeliveryNoteItem }o--|| ProcurementRequestItem : references
+    
+    User ||--o{ Notification : receives
+    User ||--o{ AuditLog : performs
+```
+
+---
+
+## 🗄️ CHI TIẾT CÁC ENTITY
+
+### 1. USER - Người Dùng Hệ Thống
+
+**Mô tả**: Quản lý thông tin user, hỗ trợ 2 loại user chính: Aladdin Staff và Supplier Staff
+
+#### Model Definition (SQLAlchemy)
+
+```python
+# app/models/user.py
+"""
+User model với FastAPI-Users integration
+Hỗ trợ authentication, authorization, và user management
+"""
+
+from datetime import datetime
+from typing import Optional, List
+from sqlalchemy import String, Boolean, Integer, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from fastapi_users.db import SQLAlchemyBaseUserTable
+
+from app.models.base import Base, TimestampMixin
+import enum
+
+
+class UserType(str, enum.Enum):
+    """User type enumeration"""
+    ALADDIN = "aladdin"
+    SUPPLIER = "supplier"
+
+
+class UserRole(str, enum.Enum):
+    """User role enumeration"""
+    SUPER_ADMIN = "super_admin"
+    ALADDIN_ADMIN = "aladdin_admin"
+    ALADDIN_STAFF = "aladdin_staff"
+    SUPPLIER_ADMIN = "supplier_admin"
+    SUPPLIER_STAFF = "supplier_staff"
+
+
+class User(SQLAlchemyBaseUserTable[int], Base, TimestampMixin):
+    """
+    User model với FastAPI-Users
+    
+    Attributes:
+        id: Primary key
+        email: Email (unique)
+        hashed_password: Password đã hash
+        is_active: User có active không
+        is_superuser: User có quyền superuser không
+        is_verified: Email đã verify chưa
+        user_type: Loại user (aladdin/supplier)
+        role: Role của user
+        supplier_id: ID nhà cung cấp (nếu là supplier)
+        first_name: Tên
+        last_name: Họ
+        phone: Số điện thoại
+        avatar_url: URL avatar
+        last_login: Thời điểm login cuối
+    """
+    
+    __tablename__ = "users"
+    
+    # FastAPI-Users fields (inherited from SQLAlchemyBaseUserTable)
+    # id, email, hashed_password, is_active, is_superuser, is_verified
+    
+    # Additional fields
+    user_type: Mapped[UserType] = mapped_column(
+        SQLEnum(UserType),
+        nullable=False,
+        comment="Loại user: aladdin hoặc supplier"
+    )
+    
+    role: Mapped[UserRole] = mapped_column(
+        SQLEnum(UserRole),
+        nullable=False,
+        comment="Role của user trong hệ thống"
+    )
+    
+    supplier_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey("suppliers.id", ondelete="CASCADE"),
+        nullable=True,
+        comment="ID nhà cung cấp (null nếu là Aladdin user)"
+    )
+    
+    first_name: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        comment="Tên"
+    )
+    
+    last_name: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        comment="Họ"
+    )
+    
+    phone: Mapped[Optional[str]] = mapped_column(
+        String(20),
+        nullable=True,
+        comment="Số điện thoại"
+    )
+    
+    avatar_url: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="URL ảnh đại diện"
+    )
+    
+    last_login: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Thời điểm login cuối cùng"
+    )
+    
+    # Relationships
+    supplier: Mapped[Optional["Supplier"]] = relationship(
+        "Supplier",
+        back_populates="users",
+        lazy="selectin"
+    )
+    
+    created_procurement_requests: Mapped[List["ProcurementRequest"]] = relationship(
+        "ProcurementRequest",
+        back_populates="created_by_user",
+        foreign_keys="ProcurementRequest.created_by"
+    )
+    
+    notifications: Mapped[List["Notification"]] = relationship(
+        "Notification",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    
+    audit_logs: Mapped[List["AuditLog"]] = relationship(
+        "AuditLog",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    
+    # Indexes
+    __table_args__ = (
+        {"comment": "Bảng user hệ thống với FastAPI-Users"},
+    )
+    
+    def __repr__(self) -> str:
+        return f"<User(id={self.id}, email={self.email}, type={self.user_type})>"
+    
+    @property
+    def full_name(self) -> str:
+        """Get full name"""
+        return f"{self.first_name} {self.last_name}"
+    
+    def is_aladdin_user(self) -> bool:
+        """Check if user is Aladdin staff"""
+        return self.user_type == UserType.ALADDIN
+    
+    def is_supplier_user(self) -> bool:
+        """Check if user is supplier staff"""
+        return self.user_type == UserType.SUPPLIER
+    
+    def has_role(self, role: UserRole) -> bool:
+        """Check if user has specific role"""
+        return self.role == role
+```
+
+#### Pydantic Schemas
+
+```python
+# app/schemas/user.py
+"""
+User schemas for API request/response
+"""
+
+from typing import Optional
+from datetime import datetime
+from pydantic import BaseModel, EmailStr, Field, field_validator
+from fastapi_users import schemas
+
+from app.models.user import UserType, UserRole
+
+
+class UserRead(schemas.BaseUser[int]):
+    """User response schema"""
+    
+    user_type: UserType
+    role: UserRole
+    supplier_id: Optional[int] = None
+    first_name: str
+    last_name: str
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
+    created_at: datetime
+    last_login: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class UserCreate(schemas.BaseUserCreate):
+    """User creation schema"""
+    
+    user_type: UserType = Field(..., description="Loại user")
+    role: UserRole = Field(..., description="Role của user")
+    supplier_id: Optional[int] = Field(None, description="ID nhà cung cấp (nếu là supplier)")
+    first_name: str = Field(..., min_length=2, max_length=50, description="Tên")
+    last_name: str = Field(..., min_length=2, max_length=50, description="Họ")
+    phone: Optional[str] = Field(None, pattern=r'^\+?1?\d{9,15}$', description="Số điện thoại")
+    
+    @field_validator('email')
+    @classmethod
+    def email_lowercase(cls, v: EmailStr) -> str:
+        """Convert email to lowercase"""
+        return v.lower()
+    
+    @field_validator('password')
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        """Validate password strength"""
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        if not any(char.isdigit() for char in v):
+            raise ValueError('Password must contain at least one digit')
+        if not any(char.isupper() for char in v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        return v
+    
+    @field_validator('supplier_id')
+    @classmethod
+    def validate_supplier_id(cls, v, info):
+        """Supplier ID is required for supplier users"""
+        user_type = info.data.get('user_type')
+        if user_type == UserType.SUPPLIER and v is None:
+            raise ValueError('supplier_id is required for supplier users')
+        if user_type == UserType.ALADDIN and v is not None:
+            raise ValueError('supplier_id should be null for Aladdin users')
+        return v
+
+
+class UserUpdate(schemas.BaseUserUpdate):
+    """User update schema"""
+    
+    first_name: Optional[str] = Field(None, min_length=2, max_length=50)
+    last_name: Optional[str] = Field(None, min_length=2, max_length=50)
+    phone: Optional[str] = Field(None, pattern=r'^\+?1?\d{9,15}$')
+    avatar_url: Optional[str] = Field(None, max_length=255)
+```
+
+#### Database Migration
+
+```python
+# alembic/versions/001_create_users_table.py
+"""create users table
+
+Revision ID: 001
+Revises: 
+Create Date: 2025-10-08
+
+"""
+from alembic import op
+import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
+
+# revision identifiers
+revision = '001'
+down_revision = None
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    # Create user_type enum
+    user_type_enum = postgresql.ENUM('aladdin', 'supplier', name='usertype')
+    user_type_enum.create(op.get_bind())
+    
+    # Create user_role enum
+    user_role_enum = postgresql.ENUM(
+        'super_admin', 'aladdin_admin', 'aladdin_staff', 
+        'supplier_admin', 'supplier_staff', 
+        name='userrole'
+    )
+    user_role_enum.create(op.get_bind())
+    
+    # Create users table
+    op.create_table(
+        'users',
+        sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column('email', sa.String(length=320), nullable=False),
+        sa.Column('hashed_password', sa.String(length=1024), nullable=False),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default='true'),
+        sa.Column('is_superuser', sa.Boolean(), nullable=False, server_default='false'),
+        sa.Column('is_verified', sa.Boolean(), nullable=False, server_default='false'),
+        sa.Column('user_type', user_type_enum, nullable=False),
+        sa.Column('role', user_role_enum, nullable=False),
+        sa.Column('supplier_id', sa.Integer(), nullable=True),
+        sa.Column('first_name', sa.String(length=50), nullable=False),
+        sa.Column('last_name', sa.String(length=50), nullable=False),
+        sa.Column('phone', sa.String(length=20), nullable=True),
+        sa.Column('avatar_url', sa.String(length=255), nullable=True),
+        sa.Column('last_login', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.ForeignKeyConstraint(['supplier_id'], ['suppliers.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id'),
+        comment='Bảng user hệ thống với FastAPI-Users'
+    )
+    
+    # Create indexes
+    op.create_index('ix_users_email', 'users', ['email'], unique=True)
+    op.create_index('ix_users_supplier_id', 'users', ['supplier_id'])
+    op.create_index('ix_users_user_type', 'users', ['user_type'])
+    op.create_index('ix_users_role', 'users', ['role'])
+
+
+def downgrade() -> None:
+    op.drop_index('ix_users_role', table_name='users')
+    op.drop_index('ix_users_user_type', table_name='users')
+    op.drop_index('ix_users_supplier_id', table_name='users')
+    op.drop_index('ix_users_email', table_name='users')
+    op.drop_table('users')
+    
+    # Drop enums
+    op.execute('DROP TYPE userrole')
+    op.execute('DROP TYPE usertype')
+```
+
+---
+
+### 2. SUPPLIER - Nhà Cung Cấp
+
+**Mô tả**: Quản lý thông tin các nhà cung cấp nguyên liệu, thực phẩm
+
+#### Model Definition
+
+```python
+# app/models/supplier.py
+"""
+Supplier model - Nhà cung cấp
+"""
+
+from typing import Optional, List
+from sqlalchemy import String, Boolean, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.base import Base, IDMixin, TimestampMixin
+
+
+class Supplier(Base, IDMixin, TimestampMixin):
+    """
+    Supplier model - Nhà cung cấp
+    
+    Attributes:
+        id: Primary key
+        code: Mã nhà cung cấp (unique)
+        name: Tên nhà cung cấp
+        email: Email liên hệ
+        phone: Số điện thoại
+        address: Địa chỉ
+        tax_code: Mã số thuế
+        contact_person: Người liên hệ
+        contact_phone: SĐT người liên hệ
+        description: Mô tả
+        is_active: Trạng thái hoạt động
+    """
+    
+    __tablename__ = "suppliers"
+    
+    code: Mapped[str] = mapped_column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True,
+        comment="Mã nhà cung cấp (unique)"
+    )
+    
+    name: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False,
+        comment="Tên nhà cung cấp"
+    )
+    
+    email: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+        comment="Email liên hệ"
+    )
+    
+    phone: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        comment="Số điện thoại"
+    )
+    
+    address: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Địa chỉ"
+    )
+    
+    tax_code: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True,
+        comment="Mã số thuế"
+    )
+    
+    contact_person: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        nullable=True,
+        comment="Người liên hệ"
+    )
+    
+    contact_phone: Mapped[Optional[str]] = mapped_column(
+        String(20),
+        nullable=True,
+        comment="SĐT người liên hệ"
+    )
+    
+    description: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Mô tả về nhà cung cấp"
+    )
+    
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+        comment="Trạng thái hoạt động"
+    )
+    
+    # Relationships
+    users: Mapped[List["User"]] = relationship(
+        "User",
+        back_populates="supplier",
+        cascade="all, delete-orphan"
+    )
+    
+    supplier_products: Mapped[List["SupplierProduct"]] = relationship(
+        "SupplierProduct",
+        back_populates="supplier",
+        cascade="all, delete-orphan"
+    )
+    
+    procurement_requests: Mapped[List["ProcurementRequest"]] = relationship(
+        "ProcurementRequest",
+        back_populates="supplier"
+    )
+    
+    delivery_notes: Mapped[List["DeliveryNote"]] = relationship(
+        "DeliveryNote",
+        back_populates="supplier"
+    )
+    
+    __table_args__ = (
+        {"comment": "Bảng nhà cung cấp"},
+    )
+    
+    def __repr__(self) -> str:
+        return f"<Supplier(id={self.id}, code={self.code}, name={self.name})>"
+```
+
+#### Pydantic Schemas
+
+```python
+# app/schemas/supplier.py
+"""
+Supplier schemas for API
+"""
+
+from typing import Optional
+from datetime import datetime
+from pydantic import BaseModel, EmailStr, Field
+
+from app.schemas.base import BaseSchema, IDMixin, TimestampMixin
+
+
+class SupplierBase(BaseModel):
+    """Base supplier schema"""
+    code: str = Field(..., min_length=1, max_length=50, description="Mã nhà cung cấp")
+    name: str = Field(..., min_length=2, max_length=200, description="Tên nhà cung cấp")
+    email: EmailStr = Field(..., description="Email liên hệ")
+    phone: str = Field(..., pattern=r'^\+?1?\d{9,15}$', description="Số điện thoại")
+    address: Optional[str] = Field(None, description="Địa chỉ")
+    tax_code: Optional[str] = Field(None, max_length=50, description="Mã số thuế")
+    contact_person: Optional[str] = Field(None, max_length=100, description="Người liên hệ")
+    contact_phone: Optional[str] = Field(None, pattern=r'^\+?1?\d{9,15}$', description="SĐT người liên hệ")
+    description: Optional[str] = Field(None, description="Mô tả")
+    is_active: bool = Field(True, description="Trạng thái hoạt động")
+
+
+class SupplierCreate(SupplierBase):
+    """Schema for creating supplier"""
+    pass
+
+
+class SupplierUpdate(BaseModel):
+    """Schema for updating supplier"""
+    code: Optional[str] = Field(None, min_length=1, max_length=50)
+    name: Optional[str] = Field(None, min_length=2, max_length=200)
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = Field(None, pattern=r'^\+?1?\d{9,15}$')
+    address: Optional[str] = None
+    tax_code: Optional[str] = Field(None, max_length=50)
+    contact_person: Optional[str] = Field(None, max_length=100)
+    contact_phone: Optional[str] = Field(None, pattern=r'^\+?1?\d{9,15}$')
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class SupplierResponse(SupplierBase, IDMixin, TimestampMixin):
+    """Schema for supplier response"""
+    
+    class Config:
+        from_attributes = True
+
+
+class SupplierListResponse(BaseModel):
+    """Schema for list of suppliers"""
+    items: list[SupplierResponse]
+    total: int
+    skip: int
+    limit: int
+```
+
+---
+
+### 3. PRODUCT & PRODUCT_CATEGORY - Sản Phẩm
+
+**Mô tả**: Quản lý danh mục sản phẩm và phân loại sản phẩm
+
+#### Model Definition
+
+```python
+# app/models/product.py
+"""
+Product models - Sản phẩm
+"""
+
+from typing import Optional, List
+from decimal import Decimal
+from sqlalchemy import String, Boolean, Text, Numeric, Integer, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.base import Base, IDMixin, TimestampMixin
+
+
+class ProductCategory(Base, IDMixin, TimestampMixin):
+    """
+    Product Category model - Danh mục sản phẩm
+    
+    Attributes:
+        id: Primary key
+        code: Mã danh mục
+        name: Tên danh mục
+        description: Mô tả
+        is_active: Trạng thái
+    """
+    
+    __tablename__ = "product_categories"
+    
+    code: Mapped[str] = mapped_column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True,
+        comment="Mã danh mục"
+    )
+    
+    name: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False,
+        comment="Tên danh mục"
+    )
+    
+    description: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Mô tả danh mục"
+    )
+    
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+        comment="Trạng thái hoạt động"
+    )
+    
+    # Relationships
+    products: Mapped[List["Product"]] = relationship(
+        "Product",
+        back_populates="category",
+        cascade="all, delete-orphan"
+    )
+    
+    __table_args__ = (
+        {"comment": "Bảng danh mục sản phẩm"},
+    )
+
+
+class Product(Base, IDMixin, TimestampMixin):
+    """
+    Product model - Sản phẩm
+    
+    Attributes:
+        id: Primary key
+        code: Mã sản phẩm Aladdin (unique)
+        name: Tên sản phẩm
+        category_id: ID danh mục
+        unit: Đơn vị tính chuẩn
+        description: Mô tả
+        specifications: Thông số kỹ thuật
+        is_active: Trạng thái
+    """
+    
+    __tablename__ = "products"
+    
+    code: Mapped[str] = mapped_column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True,
+        comment="Mã sản phẩm Aladdin (unique)"
+    )
+    
+    name: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False,
+        comment="Tên sản phẩm"
+    )
+    
+    category_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("product_categories.id", ondelete="RESTRICT"),
+        nullable=False,
+        comment="ID danh mục sản phẩm"
+    )
+    
+    unit: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        comment="Đơn vị tính chuẩn (kg, lít, cái, ...)"
+    )
+    
+    description: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Mô tả sản phẩm"
+    )
+    
+    specifications: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Thông số kỹ thuật (JSON string)"
+    )
+    
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+        comment="Trạng thái hoạt động"
+    )
+    
+    # Relationships
+    category: Mapped["ProductCategory"] = relationship(
+        "ProductCategory",
+        back_populates="products",
+        lazy="selectin"
+    )
+    
+    supplier_products: Mapped[List["SupplierProduct"]] = relationship(
+        "SupplierProduct",
+        back_populates="product",
+        cascade="all, delete-orphan"
+    )
+    
+    procurement_request_items: Mapped[List["ProcurementRequestItem"]] = relationship(
+        "ProcurementRequestItem",
+        back_populates="product"
+    )
+    
+    delivery_note_items: Mapped[List["DeliveryNoteItem"]] = relationship(
+        "DeliveryNoteItem",
+        back_populates="product"
+    )
+    
+    __table_args__ = (
+        {"comment": "Bảng sản phẩm"},
+    )
+
+
+class SupplierProduct(Base, IDMixin, TimestampMixin):
+    """
+    Supplier Product model - Mapping sản phẩm giữa Aladdin và Supplier
+    
+    Attributes:
+        id: Primary key
+        supplier_id: ID nhà cung cấp
+        product_id: ID sản phẩm Aladdin
+        supplier_product_code: Mã sản phẩm của supplier
+        supplier_product_name: Tên sản phẩm của supplier
+        supplier_unit: Đơn vị tính của supplier
+        conversion_rate: Tỷ lệ chuyển đổi (supplier_unit = conversion_rate * aladdin_unit)
+        price: Giá mặc định
+        min_order_quantity: Số lượng đặt hàng tối thiểu
+        is_active: Trạng thái
+    """
+    
+    __tablename__ = "supplier_products"
+    
+    supplier_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("suppliers.id", ondelete="CASCADE"),
+        nullable=False,
+        comment="ID nhà cung cấp"
+    )
+    
+    product_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("products.id", ondelete="RESTRICT"),
+        nullable=False,
+        comment="ID sản phẩm Aladdin"
+    )
+    
+    supplier_product_code: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        comment="Mã sản phẩm của supplier"
+    )
+    
+    supplier_product_name: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False,
+        comment="Tên sản phẩm của supplier"
+    )
+    
+    supplier_unit: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        comment="Đơn vị tính của supplier"
+    )
+    
+    conversion_rate: Mapped[Decimal] = mapped_column(
+        Numeric(10, 4),
+        nullable=False,
+        default=1.0000,
+        comment="Tỷ lệ chuyển đổi: supplier_unit = rate * aladdin_unit"
+    )
+    
+    price: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(15, 2),
+        nullable=True,
+        comment="Giá mặc định"
+    )
+    
+    min_order_quantity: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(10, 2),
+        nullable=True,
+        comment="Số lượng đặt hàng tối thiểu"
+    )
+    
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+        comment="Trạng thái hoạt động"
+    )
+    
+    # Relationships
+    supplier: Mapped["Supplier"] = relationship(
+        "Supplier",
+        back_populates="supplier_products",
+        lazy="selectin"
+    )
+    
+    product: Mapped["Product"] = relationship(
+        "Product",
+        back_populates="supplier_products",
+        lazy="selectin"
+    )
+    
+    __table_args__ = (
+        {"comment": "Bảng mapping sản phẩm giữa Aladdin và Supplier"},
+    )
+```
+
+---
+
+*(Tiếp tục trong phần tiếp theo để đảm bảo không quá dài...)*
+
+**File này sẽ tiếp tục với:**
+- Restaurant entity
+- ProcurementRequest (YCMS) entity
+- ProcurementRequestItem entity
+- DeliveryNote entity
+- DeliveryNoteItem entity
+- Notification entity
+- AuditLog entity
+- Indexes và Constraints chi tiết
+
+---
+
+**Document Status**: ✅ Part 1 Complete  
+**Next**: Continue with remaining entities  
+**Version**: 1.0  
+**Last Updated**: 2025-10-08

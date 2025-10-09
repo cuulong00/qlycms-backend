@@ -1,10 +1,13 @@
 """Common schemas used across the application."""
 
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from pydantic import Field
 
 from app.schemas.base import BaseSchema
+
+# Type variable for generic paginated response
+T = TypeVar("T")
 
 
 class HealthCheck(BaseSchema):
@@ -52,3 +55,32 @@ class ValidationError(BaseSchema):
     """Validation error response."""
     
     detail: list[ErrorDetail] = Field(..., description="Validation errors")
+
+
+class PaginatedResponse(BaseSchema, Generic[T]):
+    """Generic paginated response schema.
+    
+    Provides pagination metadata along with items.
+    Type parameter T represents the type of items in the list.
+    
+    Attributes:
+        items: List of items for current page
+        total: Total number of items across all pages
+        skip: Number of items skipped
+        limit: Maximum number of items per page
+        has_more: Whether there are more items after current page
+    """
+    
+    items: list[T] = Field(..., description="List of items for current page")
+    total: int = Field(..., ge=0, description="Total number of items")
+    skip: int = Field(..., ge=0, description="Number of items skipped")
+    limit: int = Field(..., ge=1, description="Maximum items per page")
+    
+    @property
+    def has_more(self) -> bool:
+        """Check if there are more items after current page.
+        
+        Returns:
+            bool: True if there are more items, False otherwise
+        """
+        return self.skip + self.limit < self.total

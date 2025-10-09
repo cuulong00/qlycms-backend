@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, IDMixin, StatusMixin, TimestampMixin
+from app.models.base import Base, IDMixin, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.user import User
 
 
-class Item(Base, IDMixin, TimestampMixin, StatusMixin):
+class Item(Base, IDMixin, TimestampMixin):
     """Item model - example entity for demonstration.
     
     This is a sample model to demonstrate the architecture.

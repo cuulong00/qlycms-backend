@@ -21,6 +21,7 @@ from app.models.base import Base
 # Import all models so Alembic can detect them
 from app.models.user import User  # noqa: F401
 from app.models.item import Item  # noqa: F401
+from app.models.supplier import Supplier  # noqa: F401
 
 # Alembic Config object
 config = context.config
@@ -33,7 +34,7 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 # Override sqlalchemy.url from settings
-config.set_main_option("sqlalchemy.url", settings.database_url_sync)
+config.set_main_option("sqlalchemy.url", settings.database_url_async)
 
 
 def run_migrations_offline() -> None:
@@ -77,7 +78,7 @@ def do_run_migrations(connection: Connection) -> None:
 async def run_async_migrations() -> None:
     """Run migrations in 'online' mode with async engine."""
     configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = settings.database_url_sync
+    configuration["sqlalchemy.url"] = settings.database_url_async
     
     connectable = async_engine_from_config(
         configuration,

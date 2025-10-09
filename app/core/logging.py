@@ -49,32 +49,20 @@ def setup_logging() -> None:
     logger.remove()
     
     # Configure format based on settings
-    if settings.LOG_FORMAT == "json":
-        log_format = (
-            "{"
-            '"time": "{time:YYYY-MM-DD HH:mm:ss.SSS}", '
-            '"level": "{level}", '
-            '"logger": "{name}", '
-            '"module": "{module}", '
-            '"function": "{function}", '
-            '"line": {line}, '
-            '"message": "{message}"'
-            "}"
-        )
-    else:
-        log_format = (
-            "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-            "<level>{level: <8}</level> | "
-            "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
-            "<level>{message}</level>"
-        )
+    # Use simple text format for now to avoid JSON serialization issues
+    log_format = (
+        "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+        "<level>{level: <8}</level> | "
+        "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
+        "<level>{message}</level>"
+    )
     
     # Add handler with configured format
     logger.add(
         sys.stdout,
         format=log_format,
         level=settings.LOG_LEVEL,
-        colorize=settings.LOG_FORMAT == "text",
+        colorize=True,
         backtrace=True,
         diagnose=True,
     )

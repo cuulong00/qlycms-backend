@@ -15,11 +15,11 @@ fastapi-users[sqlalchemy]==14.0.1  # Complete user management system
 authlib==1.6.5  # OAuth 2.0 / OpenID Connect
 python-jose[cryptography]==3.3.0  # JWT token handling
 passlib[bcrypt]==1.7.4  # Password hashing
-python-casbin==1.37.6  # Authorization with RBAC/ABAC/ACL
-casbin-sqlalchemy-adapter==1.5.0  # Casbin adapter for SQLAlchemy
+casbin==1.37.0  # Authorization with RBAC/ABAC/ACL (Note: package name is casbin, not python-casbin)
+casbin-sqlalchemy-adapter==1.4.0  # Casbin adapter for SQLAlchemy (updated to available version)
 
 # Data Validation & Serialization
-python-multipart==0.0.17  # File upload support
+python-multipart==0.0.20  # File upload support (updated for fastapi-users compatibility)
 email-validator==2.2.0  # Email validation
 
 # HTTP & Networking
